@@ -1,0 +1,4 @@
+# Cloudflare Pages redirects for payments.brandquality.com
+# All routes serve index.html (SPA behavior)
+/success   /success.html   200
+/*         /index.html     200
