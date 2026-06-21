@@ -392,7 +392,7 @@
       <div class="icon">⚠️</div>
       <h2>Invoice Not Found</h2>
       <p id="error-detail">We couldn't load this invoice. Please check the link or contact us.</p>
-      <p class="sub"><a href="mailto:invoices@brandquality.com" style="color:var(--bq-accent)">invoices@brandquality.com</a></p>
+      <p class="sub"><a href="mailto:payments@brandquality.com" style="color:var(--bq-accent)">payments@brandquality.com</a></p>
     </div>
   </div>
 
@@ -826,7 +826,7 @@ $('payment-form').addEventListener('submit', async (e) => {
   if (error) {
     msgEl.textContent = (error.type === 'card_error' || error.type === 'validation_error')
       ? error.message
-      : 'Something went wrong. Please try again or contact invoices@brandquality.com';
+      : 'Something went wrong. Please try again or contact payments@brandquality.com';
     msgEl.style.display = 'block';
     btnEl.disabled = false;
     btnEl.classList.remove('loading');
@@ -938,7 +938,7 @@ async function init() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     invoiceData = await res.json();
   } catch(e) {
-    $('error-detail').textContent = 'Invoice not found. Please check the link or contact invoices@brandquality.com';
+    $('error-detail').textContent = 'Invoice not found. Please check the link or contact payments@brandquality.com';
     showState('error');
     return;
   }
