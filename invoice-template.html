@@ -323,8 +323,8 @@
     align-items: center;
     margin-top: 10px;
   }
-  .payment-icons span { line-height: 0; align-items: center; }
-  .payment-icons svg { display: block; }
+  .payment-icons span { line-height: 0; position: relative; }
+  .payment-icons svg { display: block; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
 
   /* ---- Payment Policy ---- */
   .policy-section {
@@ -384,7 +384,7 @@
 <div class="page">
 
   <!-- PAID watermark — set class to "paid-watermark visible" when paidStamp = true -->
-  <div class="paid-watermark {{#if paidStamp}}visible{{/if}}">PAID</div>
+  <div class="paid-watermark {{#if paidStamp}}visible{{/if}}" style="{{stampStyle}}">{{stampText}}</div>
 
   <!-- Header -->
   <div class="header">
@@ -438,7 +438,7 @@
     <!-- Deposit applied (shown only when amountPaid > 0) -->
     {{#if amountPaid}}
     <div class="line-item">
-      <div class="line-item-desc">Deposit Received — Applied to Total</div>
+      <div class="line-item-desc">{{paidRowLabel}}</div>
       <div class="line-item-amount credit">-${{amountPaidFormatted}}</div>
     </div>
     {{/if}}
@@ -453,13 +453,13 @@
     </div>
     {{#if amountPaid}}
     <div class="totals-row">
-      <span class="totals-label">Deposit Paid</span>
+      <span class="totals-label">{{paidTotalLabel}}</span>
       <span class="totals-value" style="color: var(--bq-green);">-${{amountPaidFormatted}}</span>
     </div>
     {{/if}}
-    <div class="totals-row balance-due {{#if paidStamp}}paid-status{{/if}}">
-      <span class="totals-label">{{#if paidStamp}}Amount Paid{{else}}Balance Due{{/if}}</span>
-      <span class="totals-value">${{balanceDueFormatted}}</span>
+    <div class="totals-row balance-due {{#if isPaidInFull}}paid-status{{/if}}">
+      <span class="totals-label">{{balanceLabel}}</span>
+      <span class="totals-value">${{balanceValueFormatted}}</span>
     </div>
   </div>
 
