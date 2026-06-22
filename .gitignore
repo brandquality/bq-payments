@@ -1,0 +1,11 @@
+# Local Wrangler deploy cache (never commit — contains local account/project state)
+.wrangler/
+
+# Node
+node_modules/
+
+# Dev mockups / previews — not part of the deployed site
+payment-*-preview.html
+
+# Stray root logo — canonical email logos live in assets/
+/bq-logo-white.png
