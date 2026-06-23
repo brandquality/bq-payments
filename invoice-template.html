@@ -487,13 +487,15 @@
   </div>
   {{/unless}}
 
-  <!-- Payment Policy -->
+  <!-- Payment Policy (hidden once the invoice is paid in full) -->
+  {{#unless isPaidInFull}}
   <div class="policy-section">
     <div class="policy-label">Other Payment Options</div>
     <div class="policy-text">
       Check payable to Brand Quality, wire transfer, or ACH.<br>Contact us at <strong>payments@brandquality.com</strong> for the mailing address or banking details.
     </div>
   </div>
+  {{/unless}}
 
   <!-- Footer -->
   <div class="footer">
