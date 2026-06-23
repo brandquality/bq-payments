@@ -137,8 +137,8 @@
   /* ---- From / To / Project Row ---- */
   .from-to-row {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 20px;
+    grid-template-columns: 0.7fr 1.6fr 1.4fr;
+    gap: 16px;
     margin-bottom: 16px;
     padding: 16px;
     background: var(--bq-stone);
@@ -403,15 +403,10 @@
     <div class="from-to-block">
       <div class="from-to-label">From</div>
       <div class="from-to-name">Brand Quality</div>
-      <div class="from-to-detail">BrandQuality.com</div>
     </div>
     <div class="from-to-block">
       <div class="from-to-label">Billed To</div>
       <div class="from-to-name">{{clientName}}</div>
-      <div class="from-to-detail">
-        {{#if primaryContact}}Attn: {{primaryContact}}<br>{{/if}}
-        {{recipientEmail}}
-      </div>
     </div>
     <div class="from-to-block">
       <div class="from-to-label">Project</div>
