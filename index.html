@@ -966,6 +966,7 @@ async function init() {
         amount: invoiceData.balanceDue,
         invoiceNum: invoiceData.invoiceNum,
         invoiceId: invoiceData.invoiceId,
+        invoiceName: invoiceData.invoiceName,
       }),
     });
     if (intentRes.ok) {
@@ -980,6 +981,7 @@ async function init() {
             amount: invoiceData.deposit,
             invoiceNum: invoiceData.invoiceNum + '-DEP',
             invoiceId: invoiceData.invoiceId,
+            invoiceName: invoiceData.invoiceName,
           }),
         });
         if (depRes.ok) {

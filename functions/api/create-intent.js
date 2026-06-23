@@ -23,7 +23,7 @@ export async function onRequestPost(context) {
       );
     }
 
-    const { amount, invoiceNum, invoiceId } = await context.request.json();
+    const { amount, invoiceNum, invoiceId, invoiceName } = await context.request.json();
 
     if (!amount || amount <= 0) {
       return new Response(
@@ -42,6 +42,8 @@ export async function onRequestPost(context) {
     });
     if (invoiceNum) params.set('metadata[invoiceNum]', invoiceNum);
     if (invoiceId) params.set('metadata[invoiceId]', invoiceId);
+    // Project name is the primary identifier on the charge (mirrors PayPal's order description)
+    if (invoiceName) params.set('description', invoiceName);
 
     const stripeRes = await fetch('https://api.stripe.com/v1/payment_intents', {
       method: 'POST',
