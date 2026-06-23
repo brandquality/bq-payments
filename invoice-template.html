@@ -487,8 +487,9 @@
   </div>
   {{/unless}}
 
-  <!-- Payment Policy (hidden once the invoice is paid in full) -->
-  {{#unless isPaidInFull}}
+  <!-- Payment Policy: only on the original invoice. Once any payment is made
+       (deposit or paid in full) the option is locked in, so this is hidden. -->
+  {{#unless paidStamp}}
   <div class="policy-section">
     <div class="policy-label">Other Payment Options</div>
     <div class="policy-text">
