@@ -716,9 +716,11 @@ function populateInvoice(data) {
     renderLineItems(data.lineItems);
   }
 
-  // Deposit toggle — only show if depositRequired AND deposit not yet paid
+  // Deposit toggle — only when a deposit is required AND nothing has been paid yet.
+  // Once any payment exists (deposit paid / final due / paid), just collect the balance.
   const depositStillOwed = data.depositRequired && data.deposit > 0 &&
-    data.status !== 'Deposit Paid' && data.status !== 'Paid';
+    !(data.amountPaid > 0) &&
+    data.status !== 'Deposit Paid' && data.status !== 'Final Due' && data.status !== 'Paid';
 
   if (depositStillOwed) {
     $('opt-deposit-amt').textContent = fmt(data.deposit);
@@ -843,7 +845,7 @@ async function loadPayPalSDK() {
   if (window.paypal) return true;
   return new Promise((resolve) => {
     const s = document.createElement('script');
-    s.src = 'https://www.paypal.com/sdk/js?client-id=' + CONFIG.PAYPAL_CLIENT_ID + '&currency=USD&intent=capture&disable-funding=venmo,paylater';
+    s.src = 'https://www.paypal.com/sdk/js?client-id=' + CONFIG.PAYPAL_CLIENT_ID + '&currency=USD&intent=capture&disable-funding=venmo,paylater,card';
     s.onload = () => resolve(true);
     s.onerror = () => { $('paypal-not-configured').style.display = 'block'; resolve(false); };
     document.head.appendChild(s);
@@ -973,7 +975,7 @@ async function init() {
       const intentData = await intentRes.json();
       if (intentData.clientSecret) invoiceData.clientSecret = intentData.clientSecret;
       // If deposit applies, create a second intent for the deposit amount
-      if (invoiceData.depositRequired && invoiceData.deposit > 0) {
+      if (invoiceData.depositRequired && invoiceData.deposit > 0 && !(invoiceData.amountPaid > 0)) {
         const depRes = await fetch('/api/create-intent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
