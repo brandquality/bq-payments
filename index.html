@@ -469,7 +469,7 @@
       </div>
 
       <div class="invoice-card-body" style="padding-top:0">
-        <div class="invoice-row">
+        <div class="invoice-row" id="invoice-total-row" style="display:none">
           <span class="row-label">Invoice Total</span>
           <span class="row-value" id="inv-total"></span>
         </div>
@@ -727,6 +727,7 @@ function populateInvoice(data) {
   if (data.amountPaid && data.amountPaid > 0) {
     $('inv-deposit-paid').textContent = fmt(data.amountPaid);
     $('deposit-paid-row').style.display = 'flex';
+    $('invoice-total-row').style.display = 'flex';
   }
 
   // Line items
