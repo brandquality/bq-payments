@@ -56,8 +56,20 @@
 
   /* Layout */
   .main {
-    flex: 1; max-width: 620px; margin: 0 auto;
+    flex: 1; max-width: 920px; margin: 0 auto;
     padding: 48px 20px 50px; width: 100%;
+  }
+  /* Non-pay states stay centered + narrow; the pay state uses the full width */
+  .state { max-width: 600px; margin-left: auto; margin-right: auto; }
+  #state-pay { max-width: none; }
+  /* Desktop two-column: invoice (sticky) left, payment right */
+  .pay-columns { display: flex; gap: 32px; align-items: flex-start; }
+  .col-invoice { flex: 0 0 42%; position: sticky; top: 24px; }
+  .col-payment { flex: 1 1 auto; min-width: 0; }
+  @media (max-width: 800px) {
+    .main { max-width: 620px; }
+    .pay-columns { display: block; }
+    .col-invoice { position: static; }
   }
 
   /* States */
@@ -416,6 +428,8 @@
       DEMO MODE — Sample invoice data. No real payment will be charged.
     </div>
 
+    <div class="pay-columns">
+    <div class="col-invoice">
     <!-- Invoice Card -->
     <div class="invoice-card">
       <div class="invoice-card-header">
@@ -473,7 +487,9 @@
         <span class="balance-amount" id="inv-paid-total"></span>
       </div>
     </div>
+    </div><!-- /col-invoice -->
 
+    <div class="col-payment">
     <!-- Deposit / Full Pay Toggle — shown only when depositRequired -->
     <div class="pay-option-block" id="pay-toggle-block" style="display:none">
       <div class="pay-option-label">How would you like to pay?</div>
@@ -547,6 +563,8 @@
         <a href="https://brandquality.com">BrandQuality.com</a>
       </div>
     </div>
+    </div><!-- /col-payment -->
+    </div><!-- /pay-columns -->
 
   </div><!-- /state-pay -->
 
