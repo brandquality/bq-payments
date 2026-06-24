@@ -48,7 +48,7 @@
   .site-header a { display: block; text-decoration: none; }
   .site-header img { display: block; height: 35px; width: auto; }
   .header-badge {
-    font-size: 9px; font-weight: 600; letter-spacing: 2.5px;
+    font-size: 12px; font-weight: 600; letter-spacing: 2.5px;
     color: var(--bq-muted); text-transform: uppercase;
     display: flex; align-items: center; gap: 6px;
   }
@@ -56,7 +56,7 @@
 
   /* Layout */
   .main {
-    flex: 1; max-width: 520px; margin: 0 auto;
+    flex: 1; max-width: 620px; margin: 0 auto;
     padding: 48px 20px 50px; width: 100%;
   }
 
@@ -75,7 +75,7 @@
     margin: 0 auto 16px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .spinner-label { font-size: 13px; color: var(--bq-muted); letter-spacing: 0.05em; }
+  .spinner-label { font-size: 16px; color: var(--bq-muted); letter-spacing: 0.05em; }
 
   /* Error / Success */
   .message-card {
@@ -85,10 +85,10 @@
     padding: 40px 32px;
     text-align: center;
   }
-  .message-card .icon { font-size: 32px; margin-bottom: 16px; }
-  .message-card h2 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
-  .message-card p { font-size: 13px; color: var(--bq-muted); line-height: 1.7; }
-  .message-card .sub { margin-top: 8px; font-size: 12px; color: var(--bq-muted); }
+  .message-card .icon { font-size: 35px; margin-bottom: 16px; }
+  .message-card h2 { font-size: 21px; font-weight: 700; margin-bottom: 10px; }
+  .message-card p { font-size: 16px; color: var(--bq-muted); line-height: 1.7; }
+  .message-card .sub { margin-top: 8px; font-size: 15px; color: var(--bq-muted); }
 
   /* Invoice Card */
   .invoice-card {
@@ -107,19 +107,19 @@
     border-bottom: 1px solid var(--bq-border);
   }
   .invoice-card-header .label {
-    font-size: 9px; font-weight: 700; letter-spacing: 2.5px;
+    font-size: 12px; font-weight: 700; letter-spacing: 2.5px;
     color: var(--bq-muted); text-transform: uppercase; margin-bottom: 4px;
   }
-  .invoice-card-header .inv-num { font-size: 16px; font-weight: 700; color: #fff; }
+  .invoice-card-header .inv-num { font-size: 19px; font-weight: 700; color: #fff; }
   .inv-status {
-    font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+    font-size: 13px; font-weight: 700; letter-spacing: 1.5px;
     text-transform: uppercase; padding: 5px 12px; border-radius: 3px;
     background: rgba(255,255,255,0.08); color: var(--bq-muted);
   }
   .invoice-card-body { padding: 4px 28px 0; }
   .invoice-row {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 0; border-bottom: 1px solid var(--bq-border); font-size: 13px;
+    padding: 12px 0; border-bottom: 1px solid var(--bq-border); font-size: 16px;
   }
   .invoice-row:last-child { border-bottom: none; }
   .invoice-row .row-label { color: var(--bq-muted); font-weight: 500; }
@@ -142,25 +142,25 @@
   }
   .paid-full-block .balance-label { color: rgba(187,247,208,0.85); }
   .paid-full-block .balance-amount { color: #fff; }
-  .balance-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--bq-muted); }
-  .balance-amount { font-size: 22px; font-weight: 700; color: #fff; }
+  .balance-label { font-size: 14px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--bq-muted); }
+  .balance-amount { font-size: 25px; font-weight: 700; color: #fff; }
 
   /* Line items table */
   .line-items-section { padding: 0 28px; display: none; }
   .line-items-section.visible { display: block; }
   .li-section-label {
-    font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
     color: var(--bq-muted); padding: 14px 0 8px;
     border-top: 1px solid var(--bq-border);
   }
   .line-items-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
   .line-items-table th {
-    font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
     color: var(--bq-muted); padding: 0 0 8px; text-align: left; border-bottom: 1px solid var(--bq-border);
   }
   .line-items-table th.li-amt { text-align: right; }
   .line-items-table td {
-    font-size: 12px; color: var(--bq-text); padding: 9px 0;
+    font-size: 15px; color: var(--bq-text); padding: 9px 0;
     border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; line-height: 1.45;
   }
   .line-items-table td.li-amt { text-align: right; white-space: nowrap; font-weight: 600; }
@@ -176,7 +176,7 @@
     margin-top: auto;
   }
   .site-footer img { height: 25px; width: auto; display: inline-block; }
-  .site-footer p { font-size: 10px; color: var(--bq-muted); letter-spacing: 0.04em; margin-top: 10px; line-height: 1.7; }
+  .site-footer p { font-size: 13px; color: var(--bq-muted); letter-spacing: 0.04em; margin-top: 10px; line-height: 1.7; }
   .site-footer a { color: var(--bq-muted); text-decoration: none; }
   .site-footer a:hover { color: var(--bq-text); }
 
@@ -189,7 +189,7 @@
     overflow: hidden;
   }
   .pay-option-label {
-    font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
     color: var(--bq-muted); padding: 14px 20px 10px;
   }
   .pay-options { display: flex; padding: 0 12px 12px; gap: 8px; }
@@ -203,7 +203,7 @@
     background: rgba(9,97,162,0.15); border-color: var(--bq-accent);
   }
   .pay-option-btn .opt-title {
-    font-size: 12px; font-weight: 700; color: var(--bq-text);
+    font-size: 15px; font-weight: 700; color: var(--bq-text);
     margin-bottom: 3px; display: flex; align-items: center; gap: 6px;
   }
   .pay-option-btn .opt-title .check {
@@ -213,8 +213,8 @@
   .pay-option-btn.selected .opt-title .check {
     border-color: var(--bq-accent); background: var(--bq-accent);
   }
-  .pay-option-btn .opt-amount { font-size: 18px; font-weight: 700; color: #fff; }
-  .pay-option-btn .opt-desc { font-size: 10px; color: var(--bq-muted); margin-top: 2px; }
+  .pay-option-btn .opt-amount { font-size: 21px; font-weight: 700; color: #fff; }
+  .pay-option-btn .opt-desc { font-size: 13px; color: var(--bq-muted); margin-top: 2px; }
 
   /* ---- Payment Method Tabs ---- */
   .method-block {
@@ -229,7 +229,7 @@
   }
   .method-tab {
     flex: 1; background: none; border: none; cursor: pointer;
-    font-family: inherit; font-size: 12px; font-weight: 600;
+    font-family: inherit; font-size: 15px; font-weight: 600;
     letter-spacing: 0.05em; text-transform: uppercase;
     color: var(--bq-muted); padding: 16px 12px;
     border-bottom: 2px solid transparent;
@@ -249,7 +249,7 @@
   .pay-btn {
     width: 100%; background: var(--bq-accent); color: #fff;
     border: none; border-radius: 6px; padding: 15px;
-    font-family: inherit; font-size: 14px; font-weight: 700;
+    font-family: inherit; font-size: 17px; font-weight: 700;
     letter-spacing: 0.05em; cursor: pointer;
     transition: opacity 0.15s ease;
   }
@@ -259,31 +259,31 @@
   .payment-message {
     display: none; margin-top: 12px; padding: 10px 14px;
     background: rgba(255,107,107,0.12); border: 1px solid rgba(255,107,107,0.3);
-    border-radius: 4px; font-size: 12px; color: #ff8b8b; line-height: 1.5;
+    border-radius: 4px; font-size: 15px; color: #ff8b8b; line-height: 1.5;
   }
 
   /* PayPal panel */
   .paypal-panel-inner { text-align: center; }
-  #paypal-button-container { max-width: 380px; margin: 0 auto 16px; }
+  #paypal-button-container { max-width: 440px; margin: 0 auto 16px; }
   .paypal-notice {
-    font-size: 11px; color: var(--bq-muted); line-height: 1.6;
+    font-size: 14px; color: var(--bq-muted); line-height: 1.6;
     padding: 0 16px;
   }
   .paypal-not-configured {
     background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.15);
     border-radius: 6px; padding: 24px 20px; text-align: center;
-    max-width: 380px; margin: 0 auto;
+    max-width: 440px; margin: 0 auto;
   }
-  .paypal-not-configured p { font-size: 12px; color: var(--bq-muted); line-height: 1.6; }
+  .paypal-not-configured p { font-size: 15px; color: var(--bq-muted); line-height: 1.6; }
   .paypal-not-configured code {
-    font-size: 10px; background: rgba(255,255,255,0.08);
+    font-size: 13px; background: rgba(255,255,255,0.08);
     padding: 2px 6px; border-radius: 3px; font-family: monospace;
   }
 
   /* Security footer */
   .security-footer {
     margin-top: 0px; text-align: center;
-    font-size: 10px; color: var(--bq-muted);
+    font-size: 13px; color: var(--bq-muted);
     letter-spacing: 0.04em; line-height: 2;
   }
   .security-footer a { color: var(--bq-muted); text-decoration: none; }
@@ -322,24 +322,24 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 36px;
+    font-size: 39px;
     color: #fff;
     line-height: 1;
   }
   .success-card h1 {
-    font-size: 24px;
+    font-size: 27px;
     font-weight: 700;
     color: var(--bq-text);
     margin-bottom: 10px;
   }
   .success-thankyou {
-    font-size: 16px;
+    font-size: 19px;
     font-weight: 700;
     color: var(--bq-muted);
     margin-bottom: 14px;
   }
   .success-card p {
-    font-size: 14px;
+    font-size: 17px;
     color: var(--bq-muted);
     line-height: 1.7;
     margin-bottom: 8px;
@@ -349,7 +349,7 @@
   .demo-banner {
     background: rgba(230,201,84,0.12); border: 1px solid rgba(230,201,84,0.3);
     border-radius: 6px; padding: 10px 16px; margin-bottom: 16px;
-    font-size: 11px; color: var(--bq-gold); text-align: center; letter-spacing: 0.03em;
+    font-size: 14px; color: var(--bq-gold); text-align: center; letter-spacing: 0.03em;
   }
 
   @media (max-width: 480px) {
@@ -404,7 +404,7 @@
       <h2 class="success-thankyou">Thank You!</h2>
       <p>Your payment has been processed successfully.</p>
       <p id="success-detail"></p>
-      <p style="margin-top:20px;font-size:12px;color:var(--bq-muted);">A confirmation email is on its way. Questions? <a href="mailto:payments@brandquality.com" style="color:var(--bq-accent);">payments@brandquality.com</a></p>
+      <p style="margin-top:20px;font-size:15px;color:var(--bq-muted);">A confirmation email is on its way. Questions? <a href="mailto:payments@brandquality.com" style="color:var(--bq-accent);">payments@brandquality.com</a></p>
     </div>
   </div>
 
@@ -743,9 +743,9 @@ async function initStripe(clientSecret) {
     // Demo or no intent yet — show a placeholder
     $('payment-element').innerHTML =
       '<div style="background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.15);' +
-      'border-radius:6px;padding:24px;text-align:center;font-size:12px;color:var(--bq-muted);line-height:1.7">' +
+      'border-radius:6px;padding:24px;text-align:center;font-size:15px;color:var(--bq-muted);line-height:1.7">' +
       'Card &amp; digital wallet form mounts here.<br>' +
-      '<span style="font-size:10px">Powered by Stripe Payment Element</span>' +
+      '<span style="font-size:13px">Powered by Stripe Payment Element</span>' +
       '</div>';
     return;
   }
