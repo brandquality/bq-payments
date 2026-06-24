@@ -318,6 +318,9 @@
   body.invoice-paid .pay-option-block { display: none !important; }
   body.invoice-paid .method-block { display: none !important; }
   body.invoice-paid .security-footer { display: none !important; }
+  /* Paid state: no payment column — center the invoice card */
+  body.invoice-paid .col-payment { display: none !important; }
+  body.invoice-paid .col-invoice { position: static; }
   body.invoice-paid #balance-block { display: none !important; }
   body.invoice-paid #paid-full-block { display: flex !important; }
   body.invoice-paid .inv-status { background: #22C55E !important; }
