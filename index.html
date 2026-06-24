@@ -56,17 +56,17 @@
 
   /* Layout */
   .main {
-    flex: 1; max-width: 920px; margin: 0 auto;
+    flex: 1; max-width: 980px; margin: 0 auto;
     padding: 48px 20px 50px; width: 100%;
   }
   /* Non-pay states stay centered + narrow; the pay state uses the full width */
   .state { max-width: 600px; margin-left: auto; margin-right: auto; }
   #state-pay { max-width: none; }
   /* Desktop two-column: invoice (sticky) left, payment right */
-  .pay-columns { display: flex; gap: 32px; align-items: flex-start; }
-  .col-invoice { flex: 0 0 42%; position: sticky; top: 24px; }
-  .col-payment { flex: 1 1 auto; min-width: 0; }
-  @media (max-width: 800px) {
+  .pay-columns { display: flex; gap: 32px; align-items: flex-start; justify-content: center; }
+  .col-invoice { flex: 0 0 500px; position: sticky; top: 24px; }
+  .col-payment { flex: 0 0 400px; min-width: 0; }
+  @media (max-width: 980px) {
     .main { max-width: 620px; }
     .pay-columns { display: block; }
     .col-invoice { position: static; }
