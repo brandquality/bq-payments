@@ -1006,6 +1006,30 @@ function mountExpressCheckout() {
       };
     }
 
+    // Itemize what's actually being charged now, so the wallet sheet shows the
+    // work and any deposit already received rather than leaving the recurring
+    // line as the only thing described. Apple requires these to reconcile to
+    // the charge, so if they don't add up we pass none and let the sheet show
+    // the total alone.
+    try {
+      const items = [];
+      (invoiceData.lineItems || []).forEach((li) => {
+        if (li.struck) return; // complimentary — already covered by the recurring section
+        const cents = Math.round((Number(li.amount) || 0) * 100);
+        if (!cents) return;
+        const name = String(li.description || 'Services').replace(/\s*\n\s*/g, ' ').trim().slice(0, 60);
+        items.push({ name: name, amount: cents });
+      });
+      const paidCents = Math.round((Number(invoiceData.amountPaid) || 0) * 100);
+      if (paidCents > 0) items.push({ name: 'Deposit Received', amount: -paidCents });
+
+      const dueCents = Math.round((Number(selectedAmount()) || 0) * 100);
+      const sum = items.reduce((a, i) => a + i.amount, 0);
+      if (items.length && sum === dueCents) eceOptions.lineItems = items;
+    } catch (err) {
+      // leave lineItems off — the sheet still shows the correct total
+    }
+
     ece = walletElements.create('expressCheckout', eceOptions);
   } catch (err) {
     return; // wallet unavailable — card form still works on its own
