@@ -910,7 +910,14 @@ async function initStripe(clientSecret) {
     }
   });
 
-  const paymentEl = elementsInstance.create('payment', { terms: { card: 'never' } });
+  // Apple Pay and Google Pay ride on top of the card method, so restricting
+  // payment_method_types to card does NOT remove them — they have to be turned
+  // off explicitly. Recurring invoices are card-only, so do that here.
+  const peOptions = { terms: { card: 'never' } };
+  if (invoiceData && invoiceData.recurringPlan) {
+    peOptions.wallets = { applePay: 'never', googlePay: 'never' };
+  }
+  const paymentEl = elementsInstance.create('payment', peOptions);
   paymentEl.mount('#payment-element');
   mountExpressCheckout();
 }
@@ -938,7 +945,14 @@ async function reinitStripe() {
       }
     }
   });
-  const paymentEl = elementsInstance.create('payment', { terms: { card: 'never' } });
+  // Apple Pay and Google Pay ride on top of the card method, so restricting
+  // payment_method_types to card does NOT remove them — they have to be turned
+  // off explicitly. Recurring invoices are card-only, so do that here.
+  const peOptions = { terms: { card: 'never' } };
+  if (invoiceData && invoiceData.recurringPlan) {
+    peOptions.wallets = { applePay: 'never', googlePay: 'never' };
+  }
+  const paymentEl = elementsInstance.create('payment', peOptions);
   paymentEl.mount('#payment-element');
   mountExpressCheckout();
 }
