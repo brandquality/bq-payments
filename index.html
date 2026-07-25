@@ -910,12 +910,13 @@ async function initStripe(clientSecret) {
     }
   });
 
-  // Apple Pay and Google Pay ride on top of the card method, so restricting
-  // payment_method_types to card does NOT remove them — they have to be turned
-  // off explicitly. Recurring invoices are card-only, so do that here.
+  // Apple Pay, Google Pay and Link all ride on top of the card method, so
+  // restricting payment_method_types to card does NOT remove them. Link is the
+  // one that offers a bank account, so it has to go too or a "bank" option
+  // keeps showing. Recurring invoices are card-only, so turn all three off.
   const peOptions = { terms: { card: 'never' } };
   if (invoiceData && invoiceData.recurringPlan) {
-    peOptions.wallets = { applePay: 'never', googlePay: 'never' };
+    peOptions.wallets = { applePay: 'never', googlePay: 'never', link: 'never' };
   }
   const paymentEl = elementsInstance.create('payment', peOptions);
   paymentEl.mount('#payment-element');
@@ -945,12 +946,13 @@ async function reinitStripe() {
       }
     }
   });
-  // Apple Pay and Google Pay ride on top of the card method, so restricting
-  // payment_method_types to card does NOT remove them — they have to be turned
-  // off explicitly. Recurring invoices are card-only, so do that here.
+  // Apple Pay, Google Pay and Link all ride on top of the card method, so
+  // restricting payment_method_types to card does NOT remove them. Link is the
+  // one that offers a bank account, so it has to go too or a "bank" option
+  // keeps showing. Recurring invoices are card-only, so turn all three off.
   const peOptions = { terms: { card: 'never' } };
   if (invoiceData && invoiceData.recurringPlan) {
-    peOptions.wallets = { applePay: 'never', googlePay: 'never' };
+    peOptions.wallets = { applePay: 'never', googlePay: 'never', link: 'never' };
   }
   const paymentEl = elementsInstance.create('payment', peOptions);
   paymentEl.mount('#payment-element');
