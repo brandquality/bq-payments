@@ -226,10 +226,16 @@
     font-style: italic;
   }
 
-  /* Complimentary line: original price struck through, visibly waived */
+  /* Complimentary line: original price struck through, visibly waived.
+     The class strikes the whole cell so the currency symbol is included;
+     the bare <s> rule is kept for older renderers. */
+  .line-item-amount.struck,
   .line-item-amount s {
-    opacity: 0.55;
+    color: #8A939C;
     text-decoration: line-through;
+    text-decoration-color: #C0392B;
+    text-decoration-thickness: 2px;
+    text-decoration-skip-ink: none;
   }
   .line-item-amount.credit {
     color: var(--bq-green);
@@ -441,7 +447,7 @@
     {{#each lineItems}}
     <div class="line-item">
       <div class="line-item-desc">{{this.description}}</div>
-      <div class="line-item-amount">${{this.amountFormatted}}</div>
+      <div class="line-item-amount {{this.amountClass}}">${{this.amountFormatted}}</div>
     </div>
     {{/each}}
 

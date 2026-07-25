@@ -279,7 +279,14 @@
   }
 
   .li-struck { color: var(--bq-muted); }
-  .li-struck s { text-decoration: line-through; opacity: 0.85; }
+  /* Red, thicker strike so a waived line reads as waived at a glance. */
+  .li-struck s {
+    text-decoration: line-through;
+    text-decoration-color: #FF6B6B;
+    text-decoration-thickness: 2px;
+    text-decoration-skip-ink: none;
+    opacity: 1;
+  }
 
   /* Recurring plan renewal authorization — sits inside the dark payment panel,
      so it uses the same night treatment as the Stripe element above it. */
