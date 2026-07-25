@@ -278,6 +278,9 @@
     border-radius: 4px; font-size: 15px; color: #ff8b8b; line-height: 1.5;
   }
 
+  .li-struck { color: var(--bq-muted); }
+  .li-struck s { text-decoration: line-through; opacity: 0.85; }
+
   /* Recurring plan renewal authorization — sits inside the dark payment panel,
      so it uses the same night treatment as the Stripe element above it. */
   .recurring-auth {
@@ -286,7 +289,7 @@
     border-left: 3px solid var(--bq-gold);
     border-radius: 6px;
     padding: 14px 16px;
-    margin: 16px 0 0;
+    margin: 16px 0 20px;
     text-align: left;
   }
   .recurring-auth .ra-title {
@@ -739,9 +742,15 @@ function renderLineItems(items) {
   items.forEach(item => {
     const isNeg = item.amount < 0;
     const tr = document.createElement('tr');
+    // A struck line is complimentary: show what it would have cost, crossed
+    // out, and let the invoice total (which excludes it) stand on its own.
+    const amtHtml = item.struck
+      ? '<s>' + fmt(item.displayAmount != null ? item.displayAmount : item.amount) + '</s>'
+      : fmt(item.amount);
+    const cls = 'li-amt' + (isNeg ? ' li-discount' : '') + (item.struck ? ' li-struck' : '');
     tr.innerHTML =
       '<td class="li-desc">' + item.description + '</td>' +
-      '<td class="li-amt' + (isNeg ? ' li-discount' : '') + '">' + fmt(item.amount) + '</td>';
+      '<td class="' + cls + '">' + amtHtml + '</td>';
     tbody.appendChild(tr);
   });
   $('line-items-section').classList.add('visible');
@@ -869,7 +878,7 @@ async function initStripe(clientSecret) {
     }
   });
 
-  const paymentEl = elementsInstance.create('payment');
+  const paymentEl = elementsInstance.create('payment', { terms: { card: 'never' } });
   paymentEl.mount('#payment-element');
 }
 
@@ -896,7 +905,7 @@ async function reinitStripe() {
       }
     }
   });
-  const paymentEl = elementsInstance.create('payment');
+  const paymentEl = elementsInstance.create('payment', { terms: { card: 'never' } });
   paymentEl.mount('#payment-element');
 }
 
