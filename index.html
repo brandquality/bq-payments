@@ -682,6 +682,7 @@ const DEMO_DATA = {
 // ---- State ----
 let currentMode   = 'full';   // 'full' | 'deposit'
 let invoiceData   = null;
+let intentError   = '';
 let invoiceParam  = null;
 let stripeInstance = null;
 let elementsInstance = null;
@@ -862,6 +863,18 @@ function applyRecurringPlanMode(data) {
 
 // ---- Stripe ----
 async function initStripe(clientSecret) {
+  if (!clientSecret && intentError) {
+    $('payment-element').innerHTML =
+      '<div style="background:rgba(192,57,43,0.10);border:1px solid rgba(192,57,43,0.45);' +
+      'border-radius:6px;padding:20px;text-align:left;font-size:14px;color:var(--bq-text);line-height:1.7">' +
+      '<strong style="display:block;margin-bottom:6px">This payment can\'t be started right now.</strong>' +
+      intentError +
+      '</div>';
+    const btn = $('submit-btn');
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+
   if (!clientSecret) {
     // Demo or no intent yet — show a placeholder
     $('payment-element').innerHTML =
@@ -1151,6 +1164,14 @@ async function init() {
         invoiceName: invoiceData.invoiceName,
       }),
     });
+    if (!intentRes.ok) {
+      // Surface the reason instead of leaving a dead form on screen.
+      try {
+        const errData = await intentRes.json();
+        intentError = (errData && errData.error) ? errData.error : '';
+      } catch (_) { intentError = ''; }
+      if (!intentError) intentError = 'We could not start this payment. Please contact payments@brandquality.com.';
+    }
     if (intentRes.ok) {
       const intentData = await intentRes.json();
       if (intentData.clientSecret) invoiceData.clientSecret = intentData.clientSecret;
