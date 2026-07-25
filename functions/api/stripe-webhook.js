@@ -40,6 +40,66 @@ function resolveTrialEnd(renewalDate) {
   return ts;
 }
 
+// Stripe product that holds every recurring plan price.
+const RECURRING_PRODUCT_ID = 'prod_UwohmrNziaaUIT';
+
+// Resolve the Stripe price from what the INVOICE says the plan costs, creating
+// it on first use. The price id used to be hardcoded, so changing the plan
+// price meant editing and redeploying this file, and any invoice quoting a
+// different amount would still have been billed the old one. Now the Notion
+// invoice is the source of truth and any amount or interval works untouched.
+// Falls back to the configured price id if anything goes wrong, so a Stripe
+// hiccup can never leave a paid invoice without a subscription.
+async function resolveRecurringPrice(secretKey, md, fallbackPriceId) {
+  try {
+    const dollars = Number(md.bq_recurring_amount);
+    if (!dollars || dollars <= 0) return fallbackPriceId;
+    const unitAmount = Math.round(dollars * 100);
+    const interval =
+      String(md.bq_recurring_interval || 'Annual').toLowerCase() === 'monthly' ? 'month' : 'year';
+
+    // Reuse an existing matching price so we don't litter Stripe with duplicates.
+    const listRes = await fetch(
+      'https://api.stripe.com/v1/prices?limit=100&active=true&currency=usd&product=' +
+        encodeURIComponent(RECURRING_PRODUCT_ID),
+      { headers: { Authorization: 'Bearer ' + secretKey } }
+    );
+    const list = await listRes.json();
+    if (listRes.ok && Array.isArray(list.data)) {
+      const hit = list.data.find(
+        (p) =>
+          p.unit_amount === unitAmount &&
+          p.recurring &&
+          p.recurring.interval === interval &&
+          p.recurring.interval_count === 1
+      );
+      if (hit) return hit.id;
+    }
+
+    const pp = new URLSearchParams();
+    pp.set('product', RECURRING_PRODUCT_ID);
+    pp.set('currency', 'usd');
+    pp.set('unit_amount', String(unitAmount));
+    pp.set('recurring[interval]', interval);
+    pp.set('nickname', 'BQ Recurring \u2014 $' + dollars + '/' + interval);
+    pp.set('metadata[bq_service]', 'recurring');
+    const createRes = await fetch('https://api.stripe.com/v1/prices', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + secretKey,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        // Same amount+interval must never create two prices on retry.
+        'Idempotency-Key': 'bqprice_' + unitAmount + '_' + interval,
+      },
+      body: pp.toString(),
+    });
+    const created = await createRes.json();
+    return createRes.ok && created.id ? created.id : fallbackPriceId;
+  } catch (err) {
+    return fallbackPriceId;
+  }
+}
+
 // Create the recurring plan subscription after the client's balance payment
 // succeeds. Year one is covered by the trial, so this schedules the first real
 // charge rather than taking money now. Best-effort: a failure here must never
@@ -170,7 +230,8 @@ export async function onRequestPost(context) {
     const md = obj.metadata ?? {};
 
     if (evt.type === 'payment_intent.succeeded' && md.bq_recurring === 'true') {
-      const priceId = env.STRIPE_RECURRING_PRICE_ID || DEFAULT_RECURRING_PRICE_ID;
+      const fallbackPriceId = env.STRIPE_RECURRING_PRICE_ID || DEFAULT_RECURRING_PRICE_ID;
+      const priceId = await resolveRecurringPrice(env.STRIPE_SECRET_KEY, md, fallbackPriceId);
       const subId = await createRecurringSubscription(env.STRIPE_SECRET_KEY, priceId, obj);
       if (subId) {
         // Hand the subscription id to n8n so it lands on the Notion invoice.
