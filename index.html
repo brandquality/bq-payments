@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pay Invoice | Brand Quality</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://js.stripe.com/v3/"></script>
 <style>
@@ -274,6 +278,22 @@
     border-radius: 4px; font-size: 15px; color: #ff8b8b; line-height: 1.5;
   }
 
+  /* Hosting plan renewal authorization */
+  .hosting-auth {
+    background: #FFF8E7;
+    border: 1px solid #E6C954;
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin: 16px 0 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #46515B;
+    text-align: left;
+  }
+  .hosting-auth strong { color: #00213D; }
+  .hosting-auth span { display: block; margin-top: 5px; }
+  .hosting-auth a { color: #0961A2; text-decoration: none; }
+
   /* PayPal panel */
   .paypal-panel-inner { text-align: center; }
   #paypal-button-container { max-width: 440px; margin: 0 auto 16px; }
@@ -512,11 +532,11 @@
 
     <!-- Payment Method Tabs -->
     <div class="method-block">
-      <div class="method-tabs">
+      <div class="method-tabs" id="method-tabs">
         <button class="method-tab active" onclick="switchTab('card')">
           💳 &nbsp;Card &amp; Digital Wallet
         </button>
-        <button class="method-tab" onclick="switchTab('paypal')">
+        <button class="method-tab" id="tab-btn-paypal" onclick="switchTab('paypal')">
           🔵 &nbsp;PayPal
         </button>
       </div>
@@ -525,6 +545,7 @@
       <div class="method-panel active" id="tab-card">
         <form id="payment-form">
           <div id="payment-element"></div>
+          <div id="hosting-authorization" class="hosting-auth" style="display:none"></div>
           <button type="submit" class="pay-btn" id="submit-btn">
             <span id="btn-text">Pay Now</span>
           </button>
@@ -756,7 +777,33 @@ function populateInvoice(data) {
     currentMode = 'full';
   }
 
+  // Invoices carrying an annual hosting plan save the card at checkout so the
+  // renewal charges on its own. Card is the only rail that supports that, so
+  // PayPal comes off and the renewal terms are disclosed before payment.
+  if (data.hostingPlan) applyHostingPlanMode(data);
+
   $('btn-text').textContent = 'Pay ' + fmt(selectedAmount());
+}
+
+function applyHostingPlanMode(data) {
+  const tabs = $('method-tabs');
+  if (tabs) tabs.style.display = 'none';
+  const paypalBtn = $('tab-btn-paypal');
+  if (paypalBtn) paypalBtn.style.display = 'none';
+  switchTab('card');
+
+  const amt  = fmt(data.hostingAmount || 300);
+  const when = data.renewalDate ? fmtDate(data.renewalDate) : 'the renewal date';
+  const el   = $('hosting-authorization');
+  if (el) {
+    el.innerHTML =
+      '<strong>Hosting renewal authorization</strong>' +
+      '<span>Year one of hosting, security &amp; maintenance is included at no charge. ' +
+      'By paying with this card you authorize Brand Quality to charge it <strong>' + amt +
+      '</strong> on <strong>' + when + '</strong>, and once a year after that, to keep your site hosted and secured. ' +
+      'You can cancel anytime at <a href="mailto:payments@brandquality.com">payments@brandquality.com</a>.</span>';
+    el.style.display = 'block';
+  }
 }
 
 // ---- Stripe ----

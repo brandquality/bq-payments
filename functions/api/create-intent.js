@@ -81,7 +81,12 @@ export async function onRequestPost(context) {
 
     // Pull the invoice's client identity server-side and attach a per-CLIENT
     // named customer. Non-fatal: if any step fails, the payment still proceeds.
+    // The same lookup is authoritative for the hosting plan — never trust the
+    // browser for whether a recurring charge gets authorized.
     let customerId = '';
+    let hostingPlan = false;
+    let hostingAmount = 0;
+    let renewalDate = '';
     try {
       const baseNum = (invoiceNum || '').replace(/-DEP$/i, '');
       if (baseNum) {
@@ -93,10 +98,23 @@ export async function onRequestPost(context) {
           // Stable, search-safe key from the client name (alphanumeric only).
           const clientKey = clientName.toLowerCase().replace(/[^a-z0-9]/g, '');
           customerId = await findOrCreateClientCustomer(STRIPE_SECRET_KEY, clientName, clientKey, contactEmail);
+          hostingPlan = inv.hostingPlan === true;
+          hostingAmount = Number(inv.hostingAmount) || 0;
+          renewalDate = (inv.renewalDate || '').toString().trim();
         }
       }
     } catch (err) {
       // ignore — proceed without a customer
+    }
+
+    // A hosting plan needs a customer to attach the saved card to. Without one
+    // the renewal could never run, so fail loudly rather than silently taking a
+    // payment that doesn't set up what the client authorized.
+    if (hostingPlan && !customerId) {
+      return new Response(
+        JSON.stringify({ error: 'Could not set up the hosting plan. Please contact payments@brandquality.com.' }),
+        { status: 500, headers: corsHeaders }
+      );
     }
 
     // Stripe expects amount in cents (integer)
@@ -105,8 +123,21 @@ export async function onRequestPost(context) {
     const params = new URLSearchParams({
       amount: String(amountCents),
       currency: 'usd',
-      'automatic_payment_methods[enabled]': 'true',
     });
+
+    if (hostingPlan) {
+      // Card only. The card has to be storable to run the annual hosting
+      // renewal off-session, and restricting the rail also keeps redirect and
+      // wallet methods (which can expire mid-authorization) out of the flow.
+      params.set('payment_method_types[0]', 'card');
+      params.set('setup_future_usage', 'off_session');
+      params.set('metadata[bq_hosting]', 'true');
+      if (hostingAmount) params.set('metadata[bq_hosting_amount]', String(hostingAmount));
+      if (renewalDate) params.set('metadata[bq_renewal_date]', renewalDate);
+    } else {
+      params.set('automatic_payment_methods[enabled]', 'true');
+    }
+
     if (invoiceNum) params.set('metadata[invoiceNum]', invoiceNum);
     if (invoiceId) params.set('metadata[invoiceId]', invoiceId);
     // Project name is the primary identifier on the charge (mirrors PayPal's order description)
