@@ -289,8 +289,16 @@
     border-left: 3px solid var(--bq-gold);
     border-radius: 6px;
     padding: 14px 16px;
-    margin: 16px 0 20px;
+    margin: 0 0 18px;
     text-align: left;
+  }
+  .pay-divider { display: flex; align-items: center; margin: 18px 0 16px; }
+  .pay-divider::before, .pay-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--bq-border);
+  }
+  .pay-divider span {
+    padding: 0 12px; font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--bq-muted);
   }
   .recurring-auth .ra-title {
     display: block;
@@ -562,9 +570,13 @@
 
       <!-- Card Panel -->
       <div class="method-panel active" id="tab-card">
+        <div id="recurring-authorization" class="recurring-auth" style="display:none"></div>
+        <div id="express-checkout-block" style="display:none">
+          <div id="express-checkout-element"></div>
+          <div class="pay-divider"><span>Or pay by card</span></div>
+        </div>
         <form id="payment-form">
           <div id="payment-element"></div>
-          <div id="recurring-authorization" class="recurring-auth" style="display:none"></div>
           <button type="submit" class="pay-btn" id="submit-btn">
             <span id="btn-text">Pay Now</span>
           </button>
@@ -880,6 +892,7 @@ async function initStripe(clientSecret) {
 
   const paymentEl = elementsInstance.create('payment', { terms: { card: 'never' } });
   paymentEl.mount('#payment-element');
+  mountExpressCheckout();
 }
 
 async function reinitStripe() {
@@ -907,6 +920,54 @@ async function reinitStripe() {
   });
   const paymentEl = elementsInstance.create('payment', { terms: { card: 'never' } });
   paymentEl.mount('#payment-element');
+  mountExpressCheckout();
+}
+
+// Wallet buttons (Apple Pay / Google Pay) above the card form. Recurring
+// invoices only — the PaymentIntent already carries setup_future_usage, so a
+// wallet payment saves the card for the renewal exactly like a typed card.
+function mountExpressCheckout() {
+  if (!invoiceData || !invoiceData.recurringPlan) return;
+  if (!stripeInstance || !elementsInstance) return;
+
+  const block = $('express-checkout-block');
+  const host  = $('express-checkout-element');
+  if (!block || !host) return;
+  host.innerHTML = '';
+
+  let ece;
+  try {
+    ece = elementsInstance.create('expressCheckout', { buttonHeight: 48 });
+  } catch (err) {
+    return; // element unavailable — card form still works on its own
+  }
+
+  // Only reveal the block (and its divider) if the device actually offers a
+  // wallet, otherwise a stray "Or pay by card" rule floats above the form.
+  ece.on('ready', (ev) => {
+    const m = ev && ev.availablePaymentMethods;
+    const any = m && Object.keys(m).some((k) => m[k]);
+    block.style.display = any ? 'block' : 'none';
+  });
+
+  ece.on('confirm', async () => {
+    const msgEl = $('payment-message');
+    if (msgEl) msgEl.style.display = 'none';
+    const { error } = await stripeInstance.confirmPayment({
+      elements: elementsInstance,
+      confirmParams: {
+        return_url: window.location.origin + window.location.pathname +
+          '?inv=' + encodeURIComponent(invoiceParam) + '&redirect_status=succeeded',
+      },
+    });
+    if (error && msgEl) {
+      msgEl.textContent = error.message ||
+        'Something went wrong. Please try again or contact payments@brandquality.com';
+      msgEl.style.display = 'block';
+    }
+  });
+
+  ece.mount('#express-checkout-element');
 }
 
 // ---- Stripe form submission ----
