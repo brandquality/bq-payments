@@ -683,6 +683,7 @@ const DEMO_DATA = {
 let currentMode   = 'full';   // 'full' | 'deposit'
 let invoiceData   = null;
 let intentError   = '';
+const EXPRESS_CHECKOUT_ENABLED = false;
 let invoiceParam  = null;
 let stripeInstance = null;
 let elementsInstance = null;
@@ -940,6 +941,11 @@ async function reinitStripe() {
 // invoices only — the PaymentIntent already carries setup_future_usage, so a
 // wallet payment saves the card for the renewal exactly like a typed card.
 function mountExpressCheckout() {
+  // Disabled: recurring invoices are card-only (see create-intent.js), and
+  // normal invoices already surface wallets inside the Payment Element, so
+  // there is nothing left for this element to add. Kept intact so it can be
+  // switched back on for a non-recurring express flow later.
+  if (!EXPRESS_CHECKOUT_ENABLED) return;
   if (!invoiceData || !invoiceData.recurringPlan) return;
   if (!stripeInstance) return;
 

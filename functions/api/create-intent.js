@@ -128,13 +128,16 @@ export async function onRequestPost(context) {
     });
 
     if (recurringPlan) {
-      // Card, Apple Pay, and Google Pay all store fine for off-session renewals
-      // (Stripe consumes the wallet cryptogram when the subscription is created
-      // right after payment). Redirect-based rails are excluded: they can't be
-      // charged off-session, and an expiring authorization is exactly how the
-      // BWLF Cash App attempts died.
-      params.set('automatic_payment_methods[enabled]', 'true');
-      params.set('automatic_payment_methods[allow_redirects]', 'never');
+      // Card only on recurring invoices, by decision.
+      //
+      // Wallets technically work, but Apple mandates its own recurring-payment
+      // disclosure block in the sheet whenever a payment sets up a subscription
+      // (omitting it makes Apple abort silently). That block can't be styled or
+      // suppressed, and it presents the plan as the headline rather than the
+      // amount actually being charged. Line items don't override it.
+      //
+      // Normal invoices are unaffected and still offer wallets.
+      params.set('payment_method_types[0]', 'card');
       params.set('setup_future_usage', 'off_session');
       params.set('metadata[bq_recurring]', 'true');
       if (recurringAmount) params.set('metadata[bq_recurring_amount]', String(recurringAmount));
