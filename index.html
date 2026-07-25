@@ -280,19 +280,29 @@
 
   /* Recurring plan renewal authorization */
   .recurring-auth {
-    background: #FFF8E7;
-    border: 1px solid #E6C954;
-    border-radius: 6px;
-    padding: 14px 16px;
+    background: var(--bq-stone);
+    border-left: 3px solid var(--bq-accent);
+    border-radius: 4px;
+    padding: 13px 16px;
     margin: 16px 0 0;
-    font-size: 13px;
-    line-height: 1.6;
-    color: #46515B;
     text-align: left;
   }
-  .recurring-auth strong { color: #00213D; }
-  .recurring-auth span { display: block; margin-top: 5px; }
-  .recurring-auth a { color: #0961A2; text-decoration: none; }
+  .recurring-auth .ra-title {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--bq-deep);
+    letter-spacing: 0.01em;
+    margin-bottom: 4px;
+  }
+  .recurring-auth .ra-body {
+    display: block;
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--bq-slate);
+  }
+  .recurring-auth strong { color: var(--bq-deep); font-weight: 700; }
+  .recurring-auth a { color: var(--bq-accent); text-decoration: none; border-bottom: 1px solid rgba(9,97,162,0.35); }
 
   /* PayPal panel */
   .paypal-panel-inner { text-align: center; }
@@ -798,22 +808,27 @@ function applyRecurringPlanMode(data) {
     ? 'every month after that'
     : 'once a year after that';
 
-  // Name what the plan actually covers, so the same block works for hosting,
-  // SiteKeep, or anything else added later.
-  const svc = Array.isArray(data.recurringServices) ? data.recurringServices.filter(Boolean) : [];
-  let covers = 'your plan';
-  if (svc.length === 1) covers = svc[0].toLowerCase();
-  else if (svc.length === 2) covers = svc[0].toLowerCase() + ' and ' + svc[1].toLowerCase();
-  else if (svc.length > 2) covers = svc.slice(0, -1).map(x => x.toLowerCase()).join(', ') + ', and ' + svc[svc.length - 1].toLowerCase();
+  // Notion forbids commas in select options, so the stored label uses " + ".
+  // Restore the comma for client-facing copy and keep it in title case.
+  const titleCase = (str) => String(str).replace(/\w\S*/g, w =>
+    w.charAt(0).toUpperCase() + w.slice(1));
+  const svc = (Array.isArray(data.recurringServices) ? data.recurringServices : [])
+    .filter(Boolean)
+    .map(x => titleCase(String(x).replace(/\s*\+\s*/g, ', ')));
+
+  let covers = 'Your Plan';
+  if (svc.length === 1) covers = svc[0];
+  else if (svc.length === 2) covers = svc[0] + ' and ' + svc[1];
+  else if (svc.length > 2) covers = svc.slice(0, -1).join('; ') + '; and ' + svc[svc.length - 1];
 
   const el = $('recurring-authorization');
   if (el) {
     el.innerHTML =
-      '<strong>Recurring plan authorization</strong>' +
-      '<span>Year one of ' + covers + ' is included at no charge. ' +
-      'By paying with this card you authorize Brand Quality to charge it <strong>' + amt +
+      '<span class="ra-title">Recurring Plan Authorization</span>' +
+      '<span class="ra-body">Year one of <strong>' + covers + '</strong> is included at no charge. ' +
+      'By providing your card information, you authorize Brand Quality to charge <strong>' + amt +
       '</strong> on <strong>' + when + '</strong>, and ' + interval + '. ' +
-      'You can cancel anytime at <a href="mailto:payments@brandquality.com">payments@brandquality.com</a>.</span>';
+      'Cancel anytime at <a href="mailto:payments@brandquality.com">payments@brandquality.com</a>.</span>';
     el.style.display = 'block';
   }
 }

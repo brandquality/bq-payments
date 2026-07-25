@@ -128,10 +128,13 @@ export async function onRequestPost(context) {
     });
 
     if (recurringPlan) {
-      // Card only. The card has to be storable to run the renewal off-session,
-      // and restricting the rail also keeps redirect and wallet methods (which
-      // can expire mid-authorization) out of the flow.
-      params.set('payment_method_types[0]', 'card');
+      // Card, Apple Pay, and Google Pay all store fine for off-session renewals
+      // (Stripe consumes the wallet cryptogram when the subscription is created
+      // right after payment). Redirect-based rails are excluded: they can't be
+      // charged off-session, and an expiring authorization is exactly how the
+      // BWLF Cash App attempts died.
+      params.set('automatic_payment_methods[enabled]', 'true');
+      params.set('automatic_payment_methods[allow_redirects]', 'never');
       params.set('setup_future_usage', 'off_session');
       params.set('metadata[bq_recurring]', 'true');
       if (recurringAmount) params.set('metadata[bq_recurring_amount]', String(recurringAmount));
