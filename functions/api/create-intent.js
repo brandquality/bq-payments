@@ -81,11 +81,12 @@ export async function onRequestPost(context) {
 
     // Pull the invoice's client identity server-side and attach a per-CLIENT
     // named customer. Non-fatal: if any step fails, the payment still proceeds.
-    // The same lookup is authoritative for the hosting plan — never trust the
+    // The same lookup is authoritative for the recurring plan — never trust the
     // browser for whether a recurring charge gets authorized.
     let customerId = '';
-    let hostingPlan = false;
-    let hostingAmount = 0;
+    let recurringPlan = false;
+    let recurringAmount = 0;
+    let recurringInterval = 'Annual';
     let renewalDate = '';
     try {
       const baseNum = (invoiceNum || '').replace(/-DEP$/i, '');
@@ -98,8 +99,9 @@ export async function onRequestPost(context) {
           // Stable, search-safe key from the client name (alphanumeric only).
           const clientKey = clientName.toLowerCase().replace(/[^a-z0-9]/g, '');
           customerId = await findOrCreateClientCustomer(STRIPE_SECRET_KEY, clientName, clientKey, contactEmail);
-          hostingPlan = inv.hostingPlan === true;
-          hostingAmount = Number(inv.hostingAmount) || 0;
+          recurringPlan = inv.recurringPlan === true;
+          recurringAmount = Number(inv.recurringAmount) || 0;
+          recurringInterval = (inv.recurringInterval || 'Annual').toString().trim();
           renewalDate = (inv.renewalDate || '').toString().trim();
         }
       }
@@ -107,12 +109,12 @@ export async function onRequestPost(context) {
       // ignore — proceed without a customer
     }
 
-    // A hosting plan needs a customer to attach the saved card to. Without one
+    // A recurring plan needs a customer to attach the saved card to. Without one
     // the renewal could never run, so fail loudly rather than silently taking a
     // payment that doesn't set up what the client authorized.
-    if (hostingPlan && !customerId) {
+    if (recurringPlan && !customerId) {
       return new Response(
-        JSON.stringify({ error: 'Could not set up the hosting plan. Please contact payments@brandquality.com.' }),
+        JSON.stringify({ error: 'Could not set up the recurring plan. Please contact payments@brandquality.com.' }),
         { status: 500, headers: corsHeaders }
       );
     }
@@ -125,14 +127,15 @@ export async function onRequestPost(context) {
       currency: 'usd',
     });
 
-    if (hostingPlan) {
-      // Card only. The card has to be storable to run the annual hosting
-      // renewal off-session, and restricting the rail also keeps redirect and
-      // wallet methods (which can expire mid-authorization) out of the flow.
+    if (recurringPlan) {
+      // Card only. The card has to be storable to run the renewal off-session,
+      // and restricting the rail also keeps redirect and wallet methods (which
+      // can expire mid-authorization) out of the flow.
       params.set('payment_method_types[0]', 'card');
       params.set('setup_future_usage', 'off_session');
-      params.set('metadata[bq_hosting]', 'true');
-      if (hostingAmount) params.set('metadata[bq_hosting_amount]', String(hostingAmount));
+      params.set('metadata[bq_recurring]', 'true');
+      if (recurringAmount) params.set('metadata[bq_recurring_amount]', String(recurringAmount));
+      if (recurringInterval) params.set('metadata[bq_recurring_interval]', recurringInterval);
       if (renewalDate) params.set('metadata[bq_renewal_date]', renewalDate);
     } else {
       params.set('automatic_payment_methods[enabled]', 'true');

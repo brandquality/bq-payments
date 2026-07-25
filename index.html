@@ -278,8 +278,8 @@
     border-radius: 4px; font-size: 15px; color: #ff8b8b; line-height: 1.5;
   }
 
-  /* Hosting plan renewal authorization */
-  .hosting-auth {
+  /* Recurring plan renewal authorization */
+  .recurring-auth {
     background: #FFF8E7;
     border: 1px solid #E6C954;
     border-radius: 6px;
@@ -290,9 +290,9 @@
     color: #46515B;
     text-align: left;
   }
-  .hosting-auth strong { color: #00213D; }
-  .hosting-auth span { display: block; margin-top: 5px; }
-  .hosting-auth a { color: #0961A2; text-decoration: none; }
+  .recurring-auth strong { color: #00213D; }
+  .recurring-auth span { display: block; margin-top: 5px; }
+  .recurring-auth a { color: #0961A2; text-decoration: none; }
 
   /* PayPal panel */
   .paypal-panel-inner { text-align: center; }
@@ -545,7 +545,7 @@
       <div class="method-panel active" id="tab-card">
         <form id="payment-form">
           <div id="payment-element"></div>
-          <div id="hosting-authorization" class="hosting-auth" style="display:none"></div>
+          <div id="recurring-authorization" class="recurring-auth" style="display:none"></div>
           <button type="submit" class="pay-btn" id="submit-btn">
             <span id="btn-text">Pay Now</span>
           </button>
@@ -777,30 +777,42 @@ function populateInvoice(data) {
     currentMode = 'full';
   }
 
-  // Invoices carrying an annual hosting plan save the card at checkout so the
-  // renewal charges on its own. Card is the only rail that supports that, so
-  // PayPal comes off and the renewal terms are disclosed before payment.
-  if (data.hostingPlan) applyHostingPlanMode(data);
+  // Invoices carrying a recurring plan save the card at checkout so the renewal
+  // charges on its own. Card is the only rail that supports that, so PayPal
+  // comes off and the renewal terms are disclosed before payment.
+  if (data.recurringPlan) applyRecurringPlanMode(data);
 
   $('btn-text').textContent = 'Pay ' + fmt(selectedAmount());
 }
 
-function applyHostingPlanMode(data) {
+function applyRecurringPlanMode(data) {
   const tabs = $('method-tabs');
   if (tabs) tabs.style.display = 'none';
   const paypalBtn = $('tab-btn-paypal');
   if (paypalBtn) paypalBtn.style.display = 'none';
   switchTab('card');
 
-  const amt  = fmt(data.hostingAmount || 300);
-  const when = data.renewalDate ? fmtDate(data.renewalDate) : 'the renewal date';
-  const el   = $('hosting-authorization');
+  const amt      = fmt(data.recurringAmount || 0);
+  const when     = data.renewalDate ? fmtDate(data.renewalDate) : 'the renewal date';
+  const interval = (data.recurringInterval || 'Annual').toLowerCase() === 'monthly'
+    ? 'every month after that'
+    : 'once a year after that';
+
+  // Name what the plan actually covers, so the same block works for hosting,
+  // SiteKeep, or anything else added later.
+  const svc = Array.isArray(data.recurringServices) ? data.recurringServices.filter(Boolean) : [];
+  let covers = 'your plan';
+  if (svc.length === 1) covers = svc[0].toLowerCase();
+  else if (svc.length === 2) covers = svc[0].toLowerCase() + ' and ' + svc[1].toLowerCase();
+  else if (svc.length > 2) covers = svc.slice(0, -1).map(x => x.toLowerCase()).join(', ') + ', and ' + svc[svc.length - 1].toLowerCase();
+
+  const el = $('recurring-authorization');
   if (el) {
     el.innerHTML =
-      '<strong>Hosting renewal authorization</strong>' +
-      '<span>Year one of hosting, security &amp; maintenance is included at no charge. ' +
+      '<strong>Recurring plan authorization</strong>' +
+      '<span>Year one of ' + covers + ' is included at no charge. ' +
       'By paying with this card you authorize Brand Quality to charge it <strong>' + amt +
-      '</strong> on <strong>' + when + '</strong>, and once a year after that, to keep your site hosted and secured. ' +
+      '</strong> on <strong>' + when + '</strong>, and ' + interval + '. ' +
       'You can cancel anytime at <a href="mailto:payments@brandquality.com">payments@brandquality.com</a>.</span>';
     el.style.display = 'block';
   }
