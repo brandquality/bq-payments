@@ -941,27 +941,50 @@ async function reinitStripe() {
 // wallet payment saves the card for the renewal exactly like a typed card.
 function mountExpressCheckout() {
   if (!invoiceData || !invoiceData.recurringPlan) return;
-  if (!stripeInstance || !elementsInstance) return;
+  if (!stripeInstance) return;
 
   const block = $('express-checkout-block');
   const host  = $('express-checkout-element');
   if (!block || !host) return;
   host.innerHTML = '';
 
-  let ece;
+  const secret = selectedClientSecret();
+  if (!secret) return;
+
+  // The wallet gets its OWN Elements instance. Sharing one with the card form
+  // means confirming from the wallet also validates the empty card fields, and
+  // that validation error dismisses the Apple Pay sheet with nothing shown.
+  let walletElements, ece;
   try {
-    ece = elementsInstance.create('expressCheckout', {
+    walletElements = stripeInstance.elements({
+      clientSecret: secret,
+      appearance: {
+        theme: 'night',
+        variables: {
+          colorPrimary: '#0961A2',
+          colorBackground: '#002952',
+          colorText: '#E4EEF6',
+          fontFamily: 'Montserrat, Helvetica Neue, Arial, sans-serif',
+          borderRadius: '4px',
+        }
+      }
+    });
+    ece = walletElements.create('expressCheckout', {
       buttonHeight: 48,
-      // Wallets only. Link renders a bright green button that fights the brand,
-      // and it isn't the express option we're offering here.
       paymentMethods: { link: 'never', amazonPay: 'never', paypal: 'never' },
-      // Dark panel: black wallet buttons would disappear into it.
       buttonTheme: { applePay: 'white-outline', googlePay: 'white' },
       layout: { maxColumns: 1, maxRows: 2 }
     });
   } catch (err) {
-    return; // element unavailable — card form still works on its own
+    return; // wallet unavailable — card form still works on its own
   }
+
+  const showWalletError = (msg) => {
+    const el = $('payment-message');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = 'block';
+  };
 
   // Only reveal the block (and its divider) if the device actually offers a
   // wallet, otherwise a stray "Or pay by card" rule floats above the form.
@@ -971,20 +994,30 @@ function mountExpressCheckout() {
     block.style.display = any ? 'block' : 'none';
   });
 
+  // A silent failure here looks like the sheet simply vanished, so always say
+  // something rather than leaving the client guessing.
+  ece.on('loaderror', (ev) => {
+    block.style.display = 'none';
+    if (ev && ev.error && ev.error.message) showWalletError(ev.error.message);
+  });
+
   ece.on('confirm', async () => {
     const msgEl = $('payment-message');
     if (msgEl) msgEl.style.display = 'none';
-    const { error } = await stripeInstance.confirmPayment({
-      elements: elementsInstance,
-      confirmParams: {
-        return_url: window.location.origin + window.location.pathname +
-          '?inv=' + encodeURIComponent(invoiceParam) + '&redirect_status=succeeded',
-      },
-    });
-    if (error && msgEl) {
-      msgEl.textContent = error.message ||
-        'Something went wrong. Please try again or contact payments@brandquality.com';
-      msgEl.style.display = 'block';
+    try {
+      const { error } = await stripeInstance.confirmPayment({
+        elements: walletElements,
+        confirmParams: {
+          return_url: window.location.origin + window.location.pathname +
+            '?inv=' + encodeURIComponent(invoiceParam) + '&redirect_status=succeeded',
+        },
+      });
+      if (error) {
+        showWalletError(error.message ||
+          'That payment could not be completed. Please try the card form below or contact payments@brandquality.com.');
+      }
+    } catch (err) {
+      showWalletError('That payment could not be completed. Please try the card form below or contact payments@brandquality.com.');
     }
   });
 
