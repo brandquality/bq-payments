@@ -937,7 +937,15 @@ function mountExpressCheckout() {
 
   let ece;
   try {
-    ece = elementsInstance.create('expressCheckout', { buttonHeight: 48 });
+    ece = elementsInstance.create('expressCheckout', {
+      buttonHeight: 48,
+      // Wallets only. Link renders a bright green button that fights the brand,
+      // and it isn't the express option we're offering here.
+      paymentMethods: { link: 'never', amazonPay: 'never', paypal: 'never' },
+      // Dark panel: black wallet buttons would disappear into it.
+      buttonTheme: { applePay: 'white-outline', googlePay: 'white' },
+      layout: { maxColumns: 1, maxRows: 2 }
+    });
   } catch (err) {
     return; // element unavailable — card form still works on its own
   }
