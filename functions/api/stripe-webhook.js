@@ -79,6 +79,23 @@ async function createRecurringSubscription(secretKey, priceId, pi) {
   }
 }
 
+// The webhook endpoint runs an older Stripe API version that does not put the
+// subscription's metadata on invoice events. That metadata carries the Notion
+// invoice id, which is the only link back to the record, so fetch it directly.
+async function fetchSubscriptionMetadata(secretKey, subscriptionId) {
+  if (!secretKey || !subscriptionId) return null;
+  try {
+    const res = await fetch('https://api.stripe.com/v1/subscriptions/' + subscriptionId, {
+      headers: { Authorization: 'Bearer ' + secretKey },
+    });
+    if (!res.ok) return null;
+    const sub = await res.json();
+    return sub && sub.metadata ? sub.metadata : null;
+  } catch (err) {
+    return null;
+  }
+}
+
 function toHex(buffer) {
   return [...new Uint8Array(buffer)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
@@ -161,11 +178,18 @@ export async function onRequestPost(context) {
         evt.data.object.metadata = { ...md, bq_subscription_id: subId };
         body = JSON.stringify(evt);
       }
-    } else if (
-      (evt.type === 'invoice.payment_succeeded' || evt.type === 'invoice.payment_failed') &&
-      obj.subscription
-    ) {
-      target = N8N_RENEWAL_WEBHOOK;
+    } else if (evt.type === 'invoice.payment_succeeded' || evt.type === 'invoice.payment_failed') {
+      const subId = obj.subscription || obj.parent?.subscription_details?.subscription || '';
+      if (subId) {
+        target = N8N_RENEWAL_WEBHOOK;
+        const subMd = await fetchSubscriptionMetadata(env.STRIPE_SECRET_KEY, subId);
+        if (subMd) {
+          // Hand n8n the link back to the Notion invoice. Safe to mutate: the
+          // signature was already verified above.
+          evt.data.object.bq_subscription_metadata = subMd;
+          body = JSON.stringify(evt);
+        }
+      }
     }
   } catch (err) {
     // fall through with the raw body
