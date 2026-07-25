@@ -969,12 +969,44 @@ function mountExpressCheckout() {
         }
       }
     });
-    ece = walletElements.create('expressCheckout', {
+    const eceOptions = {
       buttonHeight: 48,
       paymentMethods: { link: 'never', amazonPay: 'never', paypal: 'never' },
       buttonTheme: { applePay: 'white-outline', googlePay: 'white' },
       layout: { maxColumns: 1, maxRows: 2 }
-    });
+    };
+
+    // Apple requires a recurring payment request whenever a wallet payment sets
+    // up a subscription. Without it Apple aborts the sheet after authorization
+    // with no error — the sheet just disappears. It also gets us a merchant
+    // token (MPAN), which survives the client replacing their device; a device
+    // token would silently break the renewal.
+    const recurAmt = Math.round((Number(invoiceData.recurringAmount) || 0) * 100);
+    if (recurAmt > 0) {
+      const planLabel = (Array.isArray(invoiceData.recurringServices) && invoiceData.recurringServices.length)
+        ? invoiceData.recurringServices.map(x => String(x).replace(/\s*\+\s*/g, ', ')).join(' and ')
+        : 'Recurring Plan';
+      const regularBilling = {
+        amount: recurAmt,
+        label: planLabel,
+        recurringPaymentIntervalUnit:
+          String(invoiceData.recurringInterval || 'Annual').toLowerCase() === 'monthly' ? 'month' : 'year'
+      };
+      // Year one is free, so tell Apple when real billing actually starts.
+      if (invoiceData.renewalDate && /^\d{4}-\d{2}-\d{2}$/.test(invoiceData.renewalDate)) {
+        const start = new Date(invoiceData.renewalDate + 'T12:00:00Z');
+        if (!isNaN(start.getTime())) regularBilling.recurringPaymentStartDate = start;
+      }
+      eceOptions.applePay = {
+        recurringPaymentRequest: {
+          paymentDescription: planLabel,
+          managementURL: 'https://brandquality.com',
+          regularBilling: regularBilling
+        }
+      };
+    }
+
+    ece = walletElements.create('expressCheckout', eceOptions);
   } catch (err) {
     return; // wallet unavailable — card form still works on its own
   }
