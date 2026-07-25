@@ -278,12 +278,14 @@
     border-radius: 4px; font-size: 15px; color: #ff8b8b; line-height: 1.5;
   }
 
-  /* Recurring plan renewal authorization */
+  /* Recurring plan renewal authorization — sits inside the dark payment panel,
+     so it uses the same night treatment as the Stripe element above it. */
   .recurring-auth {
-    background: var(--bq-stone);
-    border-left: 3px solid var(--bq-accent);
-    border-radius: 4px;
-    padding: 13px 16px;
+    background: rgba(255,255,255,0.045);
+    border: 1px solid var(--bq-border);
+    border-left: 3px solid var(--bq-gold);
+    border-radius: 6px;
+    padding: 14px 16px;
     margin: 16px 0 0;
     text-align: left;
   }
@@ -291,18 +293,22 @@
     display: block;
     font-size: 13px;
     font-weight: 700;
-    color: var(--bq-deep);
-    letter-spacing: 0.01em;
-    margin-bottom: 4px;
+    color: var(--bq-text);
+    letter-spacing: 0.02em;
+    margin-bottom: 5px;
   }
   .recurring-auth .ra-body {
     display: block;
     font-size: 12.5px;
-    line-height: 1.65;
-    color: var(--bq-slate);
+    line-height: 1.7;
+    color: rgba(255,255,255,0.62);
   }
-  .recurring-auth strong { color: var(--bq-deep); font-weight: 700; }
-  .recurring-auth a { color: var(--bq-accent); text-decoration: none; border-bottom: 1px solid rgba(9,97,162,0.35); }
+  .recurring-auth strong { color: var(--bq-text); font-weight: 700; }
+  .recurring-auth a {
+    color: var(--bq-gold);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(230,201,84,0.40);
+  }
 
   /* PayPal panel */
   .paypal-panel-inner { text-align: center; }
