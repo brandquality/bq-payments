@@ -654,7 +654,10 @@ const CONFIG = {
 
   // n8n endpoints
   N8N_BASE: 'https://n8n.brandquality.com/webhook',
-  get INVOICE_LOOKUP()    { return this.N8N_BASE + '/invoice-lookup'; },
+  // Same-origin proxy, not n8n directly. The proxy attaches the private gateway
+  // token and strips the contact emails and subscription id this page never
+  // reads, so the invoice API stops answering the open internet.
+  get INVOICE_LOOKUP()    { return '/api/invoice-lookup'; },
   get PAYPAL_CREATE()     { return this.N8N_BASE + '/paypal-create-order'; },
   get PAYPAL_CAPTURE()    { return this.N8N_BASE + '/paypal-capture-order'; },
 };

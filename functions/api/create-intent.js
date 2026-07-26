@@ -53,8 +53,11 @@ async function findOrCreateClientCustomer(secretKey, clientName, clientKey, emai
 }
 
 export async function onRequestPost(context) {
+  // Scoped to the payment page. This used to be '*', which let any site on the
+  // internet open payment intents against the live Stripe account: a card
+  // testing surface, and card testing brings disputes and account penalties.
   const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': 'https://payments.brandquality.com',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json',
@@ -79,34 +82,74 @@ export async function onRequestPost(context) {
       );
     }
 
-    // Pull the invoice's client identity server-side and attach a per-CLIENT
-    // named customer. Non-fatal: if any step fails, the payment still proceeds.
-    // The same lookup is authoritative for the recurring plan — never trust the
-    // browser for whether a recurring charge gets authorized.
+    // Pull the invoice server-side. It is authoritative for three things the
+    // browser must never decide: who the customer is, how much to charge, and
+    // whether a recurring plan gets authorized.
+    //
+    // A failed lookup used to be swallowed, which quietly produced two bad
+    // outcomes. The amount went unchecked, and a recurring invoice was charged
+    // as an ordinary one, taking the client's money without ever setting up the
+    // plan they had just agreed to. Asking them to retry is far better than
+    // getting either of those wrong.
+    //
+    // Note this calls n8n directly rather than the /api/invoice-lookup proxy,
+    // because it needs the contact email that the proxy strips for browsers.
     let customerId = '';
     let recurringPlan = false;
     let recurringAmount = 0;
     let recurringInterval = 'Annual';
     let renewalDate = '';
-    try {
-      const baseNum = (invoiceNum || '').replace(/-DEP$/i, '');
-      if (baseNum) {
-        const lr = await fetch(INVOICE_LOOKUP + '?inv=' + encodeURIComponent(baseNum));
-        if (lr.ok) {
-          const inv = await lr.json();
-          const clientName = (inv.clientName || '').toString().trim();
-          const contactEmail = (inv.contactEmail || '').toString().trim();
-          // Stable, search-safe key from the client name (alphanumeric only).
-          const clientKey = clientName.toLowerCase().replace(/[^a-z0-9]/g, '');
-          customerId = await findOrCreateClientCustomer(STRIPE_SECRET_KEY, clientName, clientKey, contactEmail);
-          recurringPlan = inv.recurringPlan === true;
-          recurringAmount = Number(inv.recurringAmount) || 0;
-          recurringInterval = (inv.recurringInterval || 'Annual').toString().trim();
-          renewalDate = (inv.renewalDate || '').toString().trim();
-        }
+
+    const isDeposit = /-DEP$/i.test(String(invoiceNum || ''));
+    const baseNum = (invoiceNum || '').replace(/-DEP$/i, '');
+
+    if (baseNum) {
+      let inv = null;
+      try {
+        const lookupHeaders = {};
+        if (context.env.N8N_PROXY_TOKEN) lookupHeaders['x-bq-proxy-token'] = context.env.N8N_PROXY_TOKEN;
+        const lr = await fetch(INVOICE_LOOKUP + '?inv=' + encodeURIComponent(baseNum), {
+          headers: lookupHeaders,
+          cache: 'no-store',
+        });
+        if (lr.ok) inv = await lr.json();
+      } catch (err) {
+        inv = null;
       }
-    } catch (err) {
-      // ignore — proceed without a customer
+
+      if (!inv || !inv.invoiceNum) {
+        return new Response(
+          JSON.stringify({ error: 'We could not verify this invoice just now. Please refresh the page and try again in a moment.' }),
+          { status: 503, headers: corsHeaders }
+        );
+      }
+
+      // The browser proposes an amount; the invoice decides. Without this an
+      // unauthenticated caller could open a payment intent for any figure
+      // against any invoice.
+      const expected = isDeposit ? Number(inv.deposit) : Number(inv.balanceDue);
+      if (!Number.isFinite(expected) || expected <= 0) {
+        return new Response(
+          JSON.stringify({ error: 'This invoice has nothing outstanding to pay.' }),
+          { status: 400, headers: corsHeaders }
+        );
+      }
+      if (Math.round(Number(amount) * 100) !== Math.round(expected * 100)) {
+        return new Response(
+          JSON.stringify({ error: 'That amount does not match this invoice. Please refresh the page and try again.' }),
+          { status: 400, headers: corsHeaders }
+        );
+      }
+
+      const clientName = (inv.clientName || '').toString().trim();
+      const contactEmail = (inv.contactEmail || '').toString().trim();
+      // Stable, search-safe key from the client name (alphanumeric only).
+      const clientKey = clientName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      customerId = await findOrCreateClientCustomer(STRIPE_SECRET_KEY, clientName, clientKey, contactEmail);
+      recurringPlan = inv.recurringPlan === true;
+      recurringAmount = Number(inv.recurringAmount) || 0;
+      recurringInterval = (inv.recurringInterval || 'Annual').toString().trim();
+      renewalDate = (inv.renewalDate || '').toString().trim();
     }
 
     // A recurring plan needs a customer to attach the saved card to. Without one
@@ -189,7 +232,7 @@ export async function onRequestPost(context) {
 export async function onRequestOptions() {
   return new Response(null, {
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': 'https://payments.brandquality.com',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     },
