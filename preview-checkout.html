@@ -330,7 +330,10 @@
 
   /* PayPal panel */
   .paypal-panel-inner { text-align: center; }
-  #paypal-button-container { max-width: 440px; margin: 0 auto 16px; }
+  #paypal-button-container { width: 100%; margin: 0; }
+  #express-header { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--bq-muted); margin: 0 0 12px; }
+  #express-checkout-block { margin-bottom: 12px; }
+  #paypal-block { margin-bottom: 4px; }
   .paypal-notice {
     font-size: 14px; color: var(--bq-muted); line-height: 1.6;
     padding: 0 16px;
@@ -576,6 +579,8 @@
     <div class="method-block">
       <div id="recurring-authorization" class="recurring-auth" style="display:none"></div>
 
+      <div id="express-header" style="display:none">Express Checkout</div>
+
       <!-- 1. Apple Pay / Google Pay (renders only on devices that support it) -->
       <div id="express-checkout-block" style="display:none">
         <div id="express-checkout-element"></div>
@@ -737,6 +742,8 @@ function updateCardDivider() {
   const anyAbove = (ece && ece.style.display !== 'none') || (pp && pp.style.display !== 'none');
   const div = $('card-divider');
   if (div) div.style.display = anyAbove ? '' : 'none';
+  const hdr = $('express-header');
+  if (hdr) hdr.style.display = anyAbove ? '' : 'none';
 }
 
 // ---- Deposit toggle ----
@@ -858,6 +865,7 @@ function populateInvoice(data) {
   if (data.recurringPlan) applyRecurringPlanMode(data);
 
   $('btn-text').textContent = 'Pay ' + fmt(selectedAmount());
+  updateCardDivider();
 }
 
 function applyRecurringPlanMode(data) {
@@ -926,9 +934,9 @@ async function initStripe(clientSecret) {
     const block = $('express-checkout-block');
     if (host && block) {
       host.innerHTML =
-        '<div style="display:flex;flex-direction:column;gap:10px">' +
-        '<div style="height:48px;border-radius:6px;background:#fff;color:#000;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px;font-family:-apple-system,Helvetica,Arial,sans-serif">\u2009\uF8FF Pay</div>' +
-        '<div style="height:48px;border-radius:6px;background:#fff;color:#3C4043;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px;border:1px solid #dadce0">G&nbsp;Pay</div>' +
+        '<div style="display:flex;flex-direction:column;gap:12px">' +
+        '<div style="height:48px;border-radius:6px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px;font-family:-apple-system,Helvetica,Arial,sans-serif">\u2009\uF8FF Pay</div>' +
+        '<div style="height:48px;border-radius:6px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px">G&nbsp;Pay</div>' +
         '</div>';
       block.style.display = 'block';
       updateCardDivider();
@@ -1055,7 +1063,7 @@ function mountExpressCheckout() {
     const eceOptions = {
       buttonHeight: 48,
       paymentMethods: { link: 'never', amazonPay: 'never', paypal: 'never' },
-      buttonTheme: { applePay: 'white-outline', googlePay: 'white' },
+      buttonTheme: { applePay: 'black', googlePay: 'black' },
       layout: { maxColumns: 1, maxRows: 2 }
     };
 
