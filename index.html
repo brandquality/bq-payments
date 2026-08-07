@@ -526,6 +526,14 @@
       </div>
 
       <div class="invoice-card-body" style="padding-top:0">
+        <div class="invoice-row" id="subtotal-row" style="display:none">
+          <span class="row-label">Total</span>
+          <span class="row-value" id="inv-subtotal"></span>
+        </div>
+        <div class="invoice-row" id="discount-row" style="display:none">
+          <span class="row-label">Discount</span>
+          <span class="row-value paid" id="inv-discount"></span>
+        </div>
         <div class="invoice-row" id="invoice-total-row" style="display:none">
           <span class="row-label">Invoice Total</span>
           <span class="row-value" id="inv-total"></span>
@@ -536,7 +544,7 @@
         </div>
       </div>
       <div class="balance-block" id="balance-block">
-        <span class="balance-label">Balance Due</span>
+        <span class="balance-label" id="balance-label">Balance Due</span>
         <span class="balance-amount" id="inv-balance"></span>
       </div>
       <div class="paid-full-block" id="paid-full-block" style="display:none;">
@@ -754,6 +762,17 @@ function selectPayMode(mode) {
   const amount = selectedAmount();
   $('btn-text').textContent = 'Pay ' + fmt(amount);
 
+  // Keep the bottom box in step with the selected option: when a deposit is
+  // the expected payment it reads Deposit Due, switching to Pay in Full flips
+  // it back to the full balance.
+  if (mode === 'deposit' && invoiceData.depositRequired && invoiceData.deposit > 0) {
+    $('balance-label').textContent = 'Deposit Due';
+    $('inv-balance').textContent = fmt(invoiceData.deposit);
+  } else {
+    $('balance-label').textContent = 'Balance Due';
+    $('inv-balance').textContent = fmt(invoiceData.balanceDue || 0);
+  }
+
   // Reinitialize Stripe if we have a different clientSecret for deposit
   if (!isDemo) reinitStripe();
 }
@@ -764,14 +783,17 @@ function renderLineItems(items) {
   const tbody = $('line-items-body');
   tbody.innerHTML = '';
   items.forEach(item => {
-    const isNeg = item.amount < 0;
+    // Negative rows are discounts. They come out of the services list and
+    // render as the Discount row in the totals stack instead, so the list
+    // shows what the work costs and the discount reads as a deduction.
+    if (item.amount < 0) return;
     const tr = document.createElement('tr');
     // A struck line is complimentary: show what it would have cost, crossed
     // out, and let the invoice total (which excludes it) stand on its own.
     const amtHtml = item.struck
       ? '<s>' + fmt(item.displayAmount != null ? item.displayAmount : item.amount) + '</s>'
       : fmt(item.amount);
-    const cls = 'li-amt' + (isNeg ? ' li-discount' : '') + (item.struck ? ' li-struck' : '');
+    const cls = 'li-amt' + (item.struck ? ' li-struck' : '');
     tr.innerHTML =
       '<td class="li-desc">' + item.description + '</td>' +
       '<td class="' + cls + '">' + amtHtml + '</td>';
@@ -797,6 +819,20 @@ function populateInvoice(data) {
   $('inv-total').textContent   = fmt(data.amount || 0);
   $('inv-balance').textContent = fmt(data.balanceDue || 0);
 
+  // Discount stack: when any negative line item exists, show
+  // Total (before discount) -> Discount -> Invoice Total, and keep the
+  // discount out of the services list (renderLineItems skips negatives).
+  const discountTotal = (data.lineItems || [])
+    .filter(li => li.amount < 0)
+    .reduce((s, li) => s + Math.abs(li.amount), 0);
+  if (discountTotal > 0) {
+    $('inv-subtotal').textContent = fmt((data.amount || 0) + discountTotal);
+    $('inv-discount').textContent = '-' + fmt(discountTotal);
+    $('subtotal-row').style.display = 'flex';
+    $('discount-row').style.display = 'flex';
+    $('invoice-total-row').style.display = 'flex';
+  }
+
   if (data.amountPaid && data.amountPaid > 0) {
     $('inv-deposit-paid').textContent = fmt(data.amountPaid);
     $('deposit-paid-row').style.display = 'flex';
@@ -821,6 +857,10 @@ function populateInvoice(data) {
     currentMode = 'deposit';
     $('btn-pay-deposit').classList.add('selected');
     $('btn-pay-full').classList.remove('selected');
+    // Deposit is the expected payment, so the bottom box leads with it.
+    // selectPayMode flips it back to Balance Due if they choose Pay in Full.
+    $('balance-label').textContent = 'Deposit Due';
+    $('inv-balance').textContent = fmt(data.deposit);
   } else {
     // No toggle — paying balance in full
     currentMode = 'full';

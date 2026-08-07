@@ -454,11 +454,29 @@
   </div>
 
   <!-- Totals -->
+  <!-- With a discount: Total (before discount) -> Discount -> Invoice Total.
+       Without: the single Project Total row, unchanged. -->
   <div class="totals-section">
+    {{#if hasDiscount}}
+    <div class="totals-row">
+      <span class="totals-label">Total</span>
+      <span class="totals-value">${{subtotalFormatted}}</span>
+    </div>
+    <div class="totals-row">
+      <span class="totals-label">Discount</span>
+      <span class="totals-value" style="color: var(--bq-green);">-${{discountFormatted}}</span>
+    </div>
+    <div class="totals-row">
+      <span class="totals-label">Invoice Total</span>
+      <span class="totals-value">${{amountFormatted}}</span>
+    </div>
+    {{/if}}
+    {{#unless hasDiscount}}
     <div class="totals-row">
       <span class="totals-label">Project Total</span>
       <span class="totals-value">${{amountFormatted}}</span>
     </div>
+    {{/unless}}
     {{#if amountPaid}}
     <div class="totals-row">
       <span class="totals-label">{{paidTotalLabel}}</span>
