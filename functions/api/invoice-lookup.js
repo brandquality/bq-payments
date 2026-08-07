@@ -61,6 +61,21 @@ export async function onRequestGet(context) {
     const headers = {};
     if (env.N8N_PROXY_TOKEN) headers['x-bq-proxy-token'] = env.N8N_PROXY_TOKEN;
 
+    // Attribution. Unknown-invoice probes started arriving (well-formed BQ
+    // numbers that don't exist), and this proxy's bare fetch meant n8n never
+    // saw who was asking. Forward the caller's identity so every lookup in
+    // the execution log answers "who": Cloudflare's verified client IP, the
+    // user agent, and where the click came from.
+    const attr = {
+      'x-bq-client-ip': request.headers.get('cf-connecting-ip'),
+      'x-bq-user-agent': request.headers.get('user-agent'),
+      'x-bq-referer': request.headers.get('referer'),
+      'x-bq-country': request.cf && request.cf.country,
+    };
+    for (const [k, v] of Object.entries(attr)) {
+      if (v) headers[k] = String(v).slice(0, 400);
+    }
+
     const upstream = await fetch(N8N_LOOKUP + '?inv=' + encodeURIComponent(inv), {
       headers,
       // Belt and braces alongside the upstream no-store headers.
