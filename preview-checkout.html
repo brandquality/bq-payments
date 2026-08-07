@@ -332,7 +332,7 @@
   /* PayPal panel */
   .paypal-panel-inner { text-align: center; }
   #paypal-button-container { width: 100%; margin: 0; }
-  #express-header { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--bq-muted); margin: 0 0 12px; }
+  #express-header { margin-top: 0; }
   #express-checkout-block { margin-bottom: 12px; }
   #paypal-block { margin-bottom: 4px; }
   .paypal-notice {
@@ -580,7 +580,7 @@
     <div class="method-block">
       <div id="recurring-authorization" class="recurring-auth" style="display:none"></div>
 
-      <div id="express-header" style="display:none">Express Checkout</div>
+      <div class="pay-divider" id="express-header" style="display:none"><span>Express Checkout</span></div>
 
       <!-- 1. Apple Pay / Google Pay (renders only on devices that support it) -->
       <div id="express-checkout-block" style="display:none">
