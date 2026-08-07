@@ -187,7 +187,13 @@ export async function onRequestPost(context) {
       if (recurringInterval) params.set('metadata[bq_recurring_interval]', recurringInterval);
       if (renewalDate) params.set('metadata[bq_renewal_date]', renewalDate);
     } else {
-      params.set('automatic_payment_methods[enabled]', 'true');
+      // Explicit allow-list instead of "whatever the Stripe account enables".
+      // Card carries Apple Pay / Google Pay (the Express Checkout element),
+      // Link is the one extra convenience we want inside the card form.
+      // Anything toggled on in the dashboard later (Klarna, Cash App, etc.)
+      // stays off this page unless it is added here deliberately.
+      params.set('payment_method_types[0]', 'card');
+      params.set('payment_method_types[1]', 'link');
     }
 
     if (invoiceNum) params.set('metadata[invoiceNum]', invoiceNum);
